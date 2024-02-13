@@ -4,6 +4,7 @@ import httpx
 from app.endpoints.auth_router import get_user_role
 from app.endpoints.auth_router import auth_router
 from starlette.responses import RedirectResponse
+from uuid import UUID
 
 host_ip = "localhost"
 auth_url = "http://localhost:8000/auth/login"
@@ -44,15 +45,42 @@ def proxy_request(service_name: str, path: str, user_info, request: Request):
 
 @user_router.get("/order")
 def read_order(request: Request, current_user: dict = Depends(get_user_role)):
-    print("\nread_order\n")
     if current_user['id'] == '':
-        print("\nid=''\n")
         request.session['prev_url'] = str(request.url)
-        print(f"\nprev_url={request.session['prev_url']}\n")
         return RedirectResponse(url=auth_url)
     else:
         return proxy_request(service_name="order", path="/order/", user_info=current_user, request=request)
+    
+# @user_router.get("/order/add")
+# def add_order(request: Request, current_user: dict = Depends(get_user_role)):
+#     print(f"\n/order/add_order\n")
+#     if current_user['id'] == '':
+#         request.session['prev_url'] = str(request.url)
+#         return RedirectResponse(url=auth_url)
+#     else:
+#         return proxy_request(service_name="order", path="/order/add/", user_info=current_user, request=request)
 
+# @order_router.post('/')
+# def add_order(
+#         order_info: CreateOrderRequest,
+#         order_service: OrderService = Depends(OrderService)
+# ) -> Order:
+#     try:
+#         print('\n///post_order///\n')
+#         order = order_service.create_order(order_info.address_info, order_info.customer_info,
+#                                            order_info.order_info)
+#         return order.dict()
+#     except KeyError:
+#         raise HTTPException(400, f'Order with id={order_info.order_id} already exists')
+
+
+@staff_router.post('/order/{id}/accepted')
+def begin_printing(id: UUID, request: Request, current_user: dict = Depends(get_user_role)):
+    if current_user['id'] == '':
+        request.session['prev_url'] = str(request.url)
+        return RedirectResponse(url=auth_url)
+    else:
+        return proxy_request(service_name="printing", path=f"/order/{id}/accepted", user_info=current_user, request=request)
 
 app.include_router(auth_router)
 app.include_router(user_router)

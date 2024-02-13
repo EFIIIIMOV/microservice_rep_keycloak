@@ -9,7 +9,7 @@ keycloak_client_id = "delivery-service-client"
 keycloak_authorization_url = f"http://{host_ip}:8080/realms/delivery-realm/protocol/openid-connect/auth"
 keycloak_token_url = f"http://{host_ip}:8080/realms/delivery-realm/protocol/openid-connect/token"
 keycloak_user_info_url = f"http://{host_ip}:8080/realms/delivery-realm/protocol/openid-connect/userinfo"
-keycloak_client_secret = "CiEXFDb5HOWk6vmT9PnYgiyOjWsSE0J2"
+keycloak_client_secret = "MfBhAHdgY5n1SRv3Ao47xhUjna5Ov26f"
 keycloak_redirect_uri = f"http://localhost:8000/auth/callback"
 keycloak_logout_uri = f"http://{host_ip}:8080/realms/delivery-realm/protocol/openid-connect/logout"
 
