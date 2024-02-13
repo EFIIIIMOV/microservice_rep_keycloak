@@ -2,7 +2,18 @@ from uuid import UUID
 
 from app.models.order import Order, CreateOrderRequest
 from app.services.order_service import OrderService
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
+from uuid import UUID
+from fastapi import APIRouter, Depends, HTTPException, Header
+
+import asyncio
+from opentelemetry import trace
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.sdk.trace.export import ConsoleSpanExporter
+from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 
 order_router = APIRouter(prefix='/order', tags=['Order'])
 
@@ -11,6 +22,17 @@ order_router = APIRouter(prefix='/order', tags=['Order'])
 def get_order(order_service: OrderService = Depends(OrderService)) -> list[Order]:
     print('\n///get_order///\n')
     return order_service.get_order()
+
+
+@order_router.get('/')
+def get_deliveries(order_service: OrderService = Depends(OrderService), user: str = Header(...)) -> list[Order]:
+    user = eval(user)
+    with tracer.start_as_current_span("Get deliveries"):
+        if user['id'] is not None:
+            if staff_admin(user['role']):
+                get_deliveries_count.inc(1)
+                return delivery_service.get_deliveries()
+            raise HTTPException(403)
 
 
 # @order_router.post('/')
