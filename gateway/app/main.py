@@ -1,13 +1,9 @@
-from fastapi import FastAPI, HTTPException, Depends, Request, Form, APIRouter
-from uuid import UUID
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Depends, Request, APIRouter
 from starlette.middleware.sessions import SessionMiddleware
 import httpx
-from gateway.endpoints.auth_router import get_user_role
-from gateway.endpoints.auth_router import auth_router
+from gateway.app.endpoints.auth_router import get_user_role
+from gateway.app.endpoints.auth_router import auth_router
 from starlette.responses import RedirectResponse
-from enum import Enum
-import logging
 
 host_ip = "localhost"
 auth_url = "http://localhost:8000/auth/login"
@@ -52,6 +48,7 @@ def read_order(request: Request, current_user: dict = Depends(get_user_role)):
     if current_user['id'] == '':
         print("\nid=''\n")
         request.session['prev_url'] = str(request.url)
+        print(f"\nprev_url={request.session['prev_url']}\n")
         return RedirectResponse(url=auth_url)
     else:
         return proxy_request(service_name="order", path="/order/", user_info=current_user, request=request)

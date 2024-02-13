@@ -53,6 +53,7 @@ def _get_token(request: Request):
 @auth_router.get("/login")
 def login(request: Request):
     print("\n/login\n")
+    print(f"\nlogin->{request.session.get('prev_url')}\n")
     authorization_url = (
         f"{keycloak_authorization_url}?response_type=code&client_id={keycloak_client_id}&scope=openid profile&redirect_uri={keycloak_redirect_uri}")
     return RedirectResponse(url=authorization_url)
@@ -68,6 +69,7 @@ def logout(request: Request):
 @auth_router.get("/callback")
 def callback(request: Request, token: str = Depends(_get_token)):
     print("\ncallback\n")
+    print(f"\ncallback->{request.session.get('prev_url')}\n")
     return RedirectResponse(url=request.session.get('prev_url'))
 
 
