@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Depends, Request, APIRouter
 from starlette.middleware.sessions import SessionMiddleware
 import httpx
-from gateway.app.endpoints.auth_router import get_user_role
-from gateway.app.endpoints.auth_router import auth_router
+from app.endpoints.auth_router import get_user_role
+from app.endpoints.auth_router import auth_router
 from starlette.responses import RedirectResponse
 
 host_ip = "localhost"
