@@ -77,69 +77,25 @@ def admin(role):
         return True
     return False
 
-# @order_router.get('/')
-# def get_order(order_service: OrderService = Depends(OrderService)) -> list[Order]:
-#     print('\n///get_order///\n')
-#     return order_service.get_order()
-
-
 @order_router.get('/')
 def get_deliveries(order_service: OrderService = Depends(OrderService), user: str = Header(...)) -> list[Order]:
-    user = eval(user)
-    with tracer.start_as_current_span("Get deliveries"):
-        if user['id'] is not None:
-            if user_admin(user['role']):
-                get_deliveries_count.inc(1)
-                return order_service.get_order()
-            raise HTTPException(403)
-
-
-# @order_router.post('/')
-# def add_order(
-#         order_info: CreateOrderRequest,
-#         order_service: OrderService = Depends(OrderService)
-# ) -> Order:
-#     try:
-#         print('\n///post_order///\n')
-#         order = order_service.create_order(order_info.address_info, order_info.customer_info,
-#                                            order_info.order_info)
-#         return order.dict()
-#     except KeyError:
-#         raise HTTPException(400, f'Order with id={order_info.order_id} already exists')
-        
-
-
-# @order_router.post('/add')
-# def add_order(
-#         order_info: CreateOrderRequest,
-#         order_service: OrderService = Depends(OrderService),
-#         user: str = Header(...)
-# ) -> Order:
-#     try:
-#         print(f"Received order info: {order_info}")
-#         user = eval(user)
-#         with tracer.start_as_current_span("Get deliveries"):
-#             if user['id'] is not None:
-#                 if user_admin(user['role']):
-#                     get_deliveries_count.inc(1)
-#                     order = order_service.create_order("order_info.address_info", "order_info.customer_info",
-#                                            "order_info.order_info")
-#                     return order.dict()
-#             raise HTTPException(403)
-#     except KeyError:
-#         raise HTTPException(400, f'Order with id={order_info.order_id} already exists')
-#         raise HTTPException(400, f'Order with id= already exists')
+    try:
+        user = eval(user)
+        with tracer.start_as_current_span("Get deliveries"):
+            if user['id'] is not None:
+                if admin(user['role']):
+                    get_deliveries_count.inc(1)
+                    return order_service.get_order()
+                raise HTTPException(403)
+    except KeyError:
+            raise HTTPException(404, f'Order with id={id} not found')
 
 @order_router.post('/add')
-async def add_order(
-        request: Request,
-        order_service: OrderService = Depends(OrderService),
-        user: str = Header(...)
-) -> Order:
+async def add_order(request: Request, order_service: OrderService = Depends(OrderService), user: str = Header(...)) -> Order:
     try:
+        user = eval(user)
         request_body = await request.body()
         request_data = json.loads(request_body)
-        user = eval(user)
         with tracer.start_as_current_span("Get deliveries"):
             if user['id'] is not None:
                 if user_admin(user['role']):
@@ -149,12 +105,31 @@ async def add_order(
             raise HTTPException(403)
     except KeyError:
         raise HTTPException(400, f'Order with id= already exists')
+    
+@order_router.get('/{id}')
+def get_deliveries_by_id(id: UUID, order_service: OrderService = Depends(OrderService), user: str = Header(...)) -> Order:
+    try:
+        user = eval(user)
+        with tracer.start_as_current_span("Get deliveries"):
+            if user['id'] is not None:
+                if admin(user['role']):
+                    get_deliveries_count.inc(1)
+                    return order_service.get_order_by_id(id)
+                raise HTTPException(403)
+    except KeyError:
+        raise HTTPException(404, f'Order with id={id} not found')
 
 @order_router.post('/{id}/accepted')
-def accepted_order(id: UUID, order_service: OrderService = Depends(OrderService)) -> Order:
+def accepted_order(id: UUID, order_service: OrderService = Depends(OrderService),user: str = Header(...)) -> Order:
     try:
-        order = order_service.accepted_order(id)
-        return order.dict()
+        user = eval(user)
+        with tracer.start_as_current_span("Get deliveries"):
+            if user['id'] is not None:
+                if admin(user['role']):
+                    get_deliveries_count.inc(1)
+                    order = order_service.accepted_order(id)
+                    return order.dict()
+            raise HTTPException(403)
     except KeyError:
         raise HTTPException(404, f'Order with id={id} not found')
     except ValueError:

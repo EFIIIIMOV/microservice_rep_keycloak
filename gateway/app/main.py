@@ -32,9 +32,7 @@ def proxy_request(service_name: str, path: str, user_info, request: Request, jso
     if request.method == 'GET':
         response = httpx.get(url, headers=headers, timeout=timeout).json()
     elif request.method == 'POST':
-        print(f"json_data={json_data}")
         response = httpx.post(url, headers=headers, json=json_data, timeout=timeout).json()
-        print(response)
     elif request.method == 'PUT':
         response = httpx.put(url, headers=headers, json=json_data).json()
     elif request.method == 'DELETE':
@@ -51,7 +49,6 @@ def read_order(request: Request, current_user: dict = Depends(get_user_role)):
     else:
         return proxy_request(service_name="order", path="/order/", user_info=current_user, request=request)
 
-
 @user_router.post("/order/add", response_model=CreateOrderRequest)
 def add_order(request: Request, order_request: CreateOrderRequest, current_user: dict = Depends(get_user_role)):
     print(f"\n/order/add\n")
@@ -62,10 +59,16 @@ def add_order(request: Request, order_request: CreateOrderRequest, current_user:
         return proxy_request(service_name="order", path="/order/add", user_info=current_user, request=request, json_data=order_request.dict())
 
 
+@user_router.get("/order/{id}")
+def read_order_by_id(id: UUID, request: Request, current_user: dict = Depends(get_user_role)):
+    if current_user['id'] == '':
+        request.session['prev_url'] = str(request.url)
+        return RedirectResponse(url=auth_url)
+    else:
+        return proxy_request(service_name="order", path=f"/order/{id}", user_info=current_user, request=request)
 
 @user_router.post('/order/{id}/accepted')
 def accepted_order(id: UUID, request: Request, current_user: dict = Depends(get_user_role)):
-    print(current_user)
     if current_user['id'] == '':
         request.session['prev_url'] = str(request.url)
         return RedirectResponse(url=auth_url)

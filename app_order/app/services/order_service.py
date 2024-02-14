@@ -8,6 +8,7 @@ from fastapi import Depends
 
 from app.models.order import Order, OrderStatus
 from app.repositories.db_order_repo import OrderRepo
+from typing import Optional
 
 
 class OrderService():
@@ -17,13 +18,15 @@ class OrderService():
         self.order_repo = order_repo
 
     def get_order(self) -> list[Order]:
-        print(f"\n////{self.order_repo}////\n")
         return self.order_repo.get_order()
 
     def create_order(self, address_info: str, customer_info: str, order_info: str) -> Order:
         order = Order(ord_id=uuid4(), status=OrderStatus.CREATE, address_info=address_info, customer_info=customer_info,
                       create_date=datetime.now(), completion_date=None, order_info=order_info)
         return self.order_repo.create_order(order)
+    
+    def get_order_by_id(self, id: UUID) -> Order:
+        return self.order_repo.get_order_by_id(id)
 
     def accepted_order(self, id: UUID) -> Order:
         from app.rabbitmq import send_to_document_queue
@@ -94,7 +97,7 @@ class OrderService():
 
         order.status = OrderStatus.CANCELLED
         return self.order_repo.set_status(order)
-
+    
     # def delete_order(self, id: UUID) -> None:
     #     order = self.order_repo.get_order_by_id(id)
     #     if not order:
