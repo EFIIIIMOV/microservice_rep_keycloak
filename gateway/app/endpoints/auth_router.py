@@ -24,14 +24,13 @@ def get_user_role(request: Request):
     user = {'role': '', 'id': '', 'username': ''}
     # return user
     try:
+        print(httpx.get(keycloak_user_info_url, headers=headers).json())
         roles = httpx.get(keycloak_user_info_url, headers=headers).json()
         print(f"\n\nUSER_ROLE={roles}\n\n")
-        if 'admin' in roles["realm_access"]["roles"]:
-            user['role'] = "admin"
-        elif "client" in roles["realm_access"]["roles"]:
-            user['role'] = "client"
-        elif "staff" in roles["realm_access"]["roles"]:
-            user['role'] = "staff"
+        if 'service_admin' in roles["realm_access"]["roles"]:
+            user['role'] = "service_admin"
+        elif "service_user" in roles["realm_access"]["roles"]:
+            user['role'] = "service_admin"
         if roles["sub"]:
             user['id'] = roles["sub"]
         user['username'] = roles['preferred_username']
@@ -47,6 +46,7 @@ def _get_token(request: Request):
     if code:
         auth_token = get_token(code)
         request.session['auth_token'] = auth_token
+    print(auth_token)
     return auth_token
 
 

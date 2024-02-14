@@ -66,13 +66,13 @@ cancelled_delivery_count = prometheus_client.Counter(
     "Total canceled deliveries"
 )
 
-def user_staff_admin(role):
-    if role == "client" or role == "staff" or role == "admin":
+def user_admin(role):
+    if role == "service_user" or role == "service_admin":
         return True
     return False
 
-def staff_admin(role):
-    if role == "staff" or role == "admin":
+def admin(role):
+    if role == "service_admin":
         return True
     return False
 
@@ -87,7 +87,7 @@ def get_deliveries(order_service: OrderService = Depends(OrderService), user: st
     user = eval(user)
     with tracer.start_as_current_span("Get deliveries"):
         if user['id'] is not None:
-            if staff_admin(user['role']):
+            if user_admin(user['role']):
                 get_deliveries_count.inc(1)
                 return order_service.get_order()
             raise HTTPException(403)
