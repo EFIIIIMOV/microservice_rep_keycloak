@@ -78,7 +78,7 @@ def admin(role):
     return False
 
 @order_router.get('/')
-def get_deliveries(order_service: OrderService = Depends(OrderService), user: str = Header(...)) -> list[Order]:
+def get_orders(order_service: OrderService = Depends(OrderService), user: str = Header(...)) -> list[Order]:
     try:
         user = eval(user)
         with tracer.start_as_current_span("Get deliveries"):
@@ -107,12 +107,12 @@ async def add_order(request: Request, order_service: OrderService = Depends(Orde
         raise HTTPException(400, f'Order with id= already exists')
     
 @order_router.get('/{id}')
-def get_deliveries_by_id(id: UUID, order_service: OrderService = Depends(OrderService), user: str = Header(...)) -> Order:
+def get_order_by_id(id: UUID, order_service: OrderService = Depends(OrderService), user: str = Header(...)) -> Order:
     try:
         user = eval(user)
         with tracer.start_as_current_span("Get deliveries"):
             if user['id'] is not None:
-                if admin(user['role']):
+                if user_admin(user['role']):
                     get_deliveries_count.inc(1)
                     return order_service.get_order_by_id(id)
                 raise HTTPException(403)
@@ -135,77 +135,114 @@ def accepted_order(id: UUID, order_service: OrderService = Depends(OrderService)
     except ValueError:
         raise HTTPException(400, f'Order with id={id} can\'t be activated')
 
+@order_router.post('/{id}/pick_up')
+def pick_up_order(id: UUID, order_service: OrderService = Depends(OrderService),user: str = Header(...)) -> Order:
+    try:
+        user = eval(user)
+        with tracer.start_as_current_span("Get deliveries"):
+            if user['id'] is not None:
+                if admin(user['role']):
+                    get_deliveries_count.inc(1)
+                    order = order_service.pick_up_order(id)
+                    return order.dict()
+            raise HTTPException(403)
+    except KeyError:
+        raise HTTPException(404, f'Order with id={id} not found')
+    except ValueError:
+        raise HTTPException(400, f'Order with id={id} can\'t be activated')
+        
+@order_router.post('/{id}/delivering')
+def delivering_order(id: UUID, order_service: OrderService = Depends(OrderService),user: str = Header(...)) -> Order:
+    try:
+        user = eval(user)
+        with tracer.start_as_current_span("Get deliveries"):
+            if user['id'] is not None:
+                if admin(user['role']):
+                    get_deliveries_count.inc(1)
+                    order = order_service.delivering_order(id)
+                    return order.dict()
+            raise HTTPException(403)
+    except KeyError:
+        raise HTTPException(404, f'Order with id={id} not found')
+    except ValueError:
+        raise HTTPException(400, f'Order with id={id} can\'t be activated')
 
-# @order_router.post('/{id}/pick_up')
-# def pick_up_order(id: UUID, order_service: OrderService = Depends(OrderService)) -> Order:
-#     try:
-#         order = order_service.pick_up_order(id)
-#         return order.dict()
-#     except KeyError:
-#         raise HTTPException(404, f'Order with id={id} not found')
-#     except ValueError:
-#         raise HTTPException(400, f'Order with id={id} can\'t be pick_up')
+@order_router.post('/{id}/delivered')
+def delivered_order(id: UUID, order_service: OrderService = Depends(OrderService),user: str = Header(...)) -> Order:
+    try:
+        user = eval(user)
+        with tracer.start_as_current_span("Get deliveries"):
+            if user['id'] is not None:
+                if admin(user['role']):
+                    get_deliveries_count.inc(1)
+                    order = order_service.delivered_order(id)
+                    return order.dict()
+            raise HTTPException(403)
+    except KeyError:
+        raise HTTPException(404, f'Order with id={id} not found')
+    except ValueError:
+        raise HTTPException(400, f'Order with id={id} can\'t be activated')
 
+@order_router.post('/{id}/paid')
+def paid_order(id: UUID, order_service: OrderService = Depends(OrderService),user: str = Header(...)) -> Order:
+    try:
+        user = eval(user)
+        with tracer.start_as_current_span("Get deliveries"):
+            if user['id'] is not None:
+                if admin(user['role']):
+                    get_deliveries_count.inc(1)
+                    order = order_service.paid_order(id)
+                    return order.dict()
+            raise HTTPException(403)
+    except KeyError:
+        raise HTTPException(404, f'Order with id={id} not found')
+    except ValueError:
+        raise HTTPException(400, f'Order with id={id} can\'t be activated')
 
-# @order_router.post('/{id}/delivering')
-# def delivering_order(id: UUID, order_service: OrderService = Depends(OrderService)) -> Order:
-#     try:
-#         order = order_service.delivering_order(id)
-#         return order.dict()
-#     except KeyError:
-#         raise HTTPException(404, f'Order with id={id} not found')
-#     except ValueError:
-#         raise HTTPException(400, f'Order with id={id} can\'t be delivering')
+@order_router.post('/{id}/done')
+def done_order(id: UUID, order_service: OrderService = Depends(OrderService),user: str = Header(...)) -> Order:
+    try:
+        user = eval(user)
+        with tracer.start_as_current_span("Get deliveries"):
+            if user['id'] is not None:
+                if admin(user['role']):
+                    get_deliveries_count.inc(1)
+                    order = order_service.done_order(id)
+                    return order.dict()
+            raise HTTPException(403)
+    except KeyError:
+        raise HTTPException(404, f'Order with id={id} not found')
+    except ValueError:
+        raise HTTPException(400, f'Order with id={id} can\'t be activated')
 
+@order_router.post('/{id}/cancel')
+def cancel_delivery(id: UUID, order_service: OrderService = Depends(OrderService),user: str = Header(...)) -> Order:
+    try:
+        user = eval(user)
+        with tracer.start_as_current_span("Get deliveries"):
+            if user['id'] is not None:
+                if user_admin(user['role']):
+                    get_deliveries_count.inc(1)
+                    order = order_service.cancel_order(id)
+                    return order.dict()
+            raise HTTPException(403)
+    except KeyError:
+        raise HTTPException(404, f'Order with id={id} not found')
+    except ValueError:
+        raise HTTPException(400, f'Order with id={id} can\'t be activated')
 
-# @order_router.post('/{id}/delivered')
-# def delivered_order(id: UUID, order_service: OrderService = Depends(OrderService)) -> Order:
-#     try:
-#         order = order_service.delivered_order(id)
-#         return order.dict()
-#     except KeyError:
-#         raise HTTPException(404, f'Order with id={id} not found')
-#     except ValueError:
-#         raise HTTPException(400, f'Order with id={id} can\'t be delivered')
-
-
-# @order_router.post('/{id}/paid')
-# def paid_order(id: UUID, order_service: OrderService = Depends(OrderService)) -> Order:
-#     try:
-#         order = order_service.paid_order(id)
-#         return order.dict()
-#     except KeyError:
-#         raise HTTPException(404, f'Order with id={id} not found')
-#     except ValueError:
-#         raise HTTPException(400, f'Order with id={id} can\'t be paid')
-
-
-# @order_router.post('/{id}/done')
-# def done_order(id: UUID, order_service: OrderService = Depends(OrderService)) -> Order:
-#     try:
-#         order = order_service.done_order(id)
-#         return order.dict()
-#     except KeyError:
-#         raise HTTPException(404, f'Order with id={id} not found')
-#     except ValueError:
-#         raise HTTPException(400, f'Order with id={id} can\'t be done')
-
-
-# @order_router.post('/{id}/cancel')
-# def cancel_delivery(id: UUID, order_service: OrderService = Depends(OrderService)) -> Order:
-#     try:
-#         order = order_service.cancel_order(id)
-#         return order.dict()
-#     except KeyError:
-#         raise HTTPException(404, f'Order with id={id} not found')
-#     except ValueError:
-#         raise HTTPException(400, f'Order with id={id} can\'t be canceled')
-
-
-# @order_router.post('/{id}/delete')
-# def delete_order(id: UUID, order_service: OrderService = Depends(OrderService)) -> Order:
-#     try:
-#         order = order_service.delete_order(id)
-#         return order.dict()
-#     except KeyError:
-#         raise HTTPException(404, f'Order with id={id} not found')
+@order_router.post('/{id}/delete')
+def delete_order(id: UUID, order_service: OrderService = Depends(OrderService),user: str = Header(...)) -> Order:
+    try:
+        user = eval(user)
+        with tracer.start_as_current_span("Get deliveries"):
+            if user['id'] is not None:
+                if admin(user['role']):
+                    get_deliveries_count.inc(1)
+                    order = order_service.delete_order(id)
+                    return order.dict()
+            raise HTTPException(403)
+    except KeyError:
+        raise HTTPException(404, f'Order with id={id} not found')
+    except ValueError:
+        raise HTTPException(400, f'Order with id={id} can\'t be activated')

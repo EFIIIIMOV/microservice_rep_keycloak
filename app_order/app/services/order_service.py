@@ -98,9 +98,9 @@ class OrderService():
         order.status = OrderStatus.CANCELLED
         return self.order_repo.set_status(order)
     
-    # def delete_order(self, id: UUID) -> None:
-    #     order = self.order_repo.get_order_by_id(id)
-    #     if not order:
-    #         raise ValueError(f'Order with id={id} not found')
-    #
-    #     return self.order_repo.delete_order(id)
+    def delete_order(self, id: UUID) -> None:
+        order = self.order_repo.get_order_by_id(id)
+        if not order:
+            raise ValueError(f'Order with id={id} not found')
+    
+        return self.order_repo.delete_order_by_id(id)
