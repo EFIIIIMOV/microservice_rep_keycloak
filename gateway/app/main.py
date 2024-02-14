@@ -1,10 +1,11 @@
 from fastapi import FastAPI, Depends, Request, APIRouter
 from starlette.middleware.sessions import SessionMiddleware
 import httpx
-from app.endpoints.auth_router import get_user_role
-from app.endpoints.auth_router import auth_router
+from gateway.app.endpoints.auth_router import get_user_role
+from gateway.app.endpoints.auth_router import auth_router
 from starlette.responses import RedirectResponse
 from uuid import UUID
+from app_order.app.models.order import CreateOrderRequest
 
 host_ip = "localhost"
 auth_url = "http://localhost:8000/auth/login"
@@ -16,16 +17,12 @@ app = FastAPI(title='Service')
 user_router = APIRouter(prefix='/user', tags=['user'])
 staff_router = APIRouter(prefix='/staff', tags=['staff'])
 app.add_middleware(SessionMiddleware, secret_key='asas12334sadfdsf')
-# app.include_router(auth_router)
-# app.include_router(user_router)
-# app.include_router(staff_router)
 
 MICROSERVICES = {
     "order": "http://localhost:80/api",
 }
 
-
-def proxy_request(service_name: str, path: str, user_info, request: Request):
+def proxy_request(service_name: str, path: str, user_info, request: Request, json_data: dict = None):
     url = f"{MICROSERVICES[service_name]}{path}"
     timeout = 20
     headers = {
@@ -35,13 +32,15 @@ def proxy_request(service_name: str, path: str, user_info, request: Request):
     if request.method == 'GET':
         response = httpx.get(url, headers=headers, timeout=timeout).json()
     elif request.method == 'POST':
-        response = httpx.post(url, headers=headers, timeout=timeout).json()
+        print(f"json_data={json_data}")
+        response = httpx.post(url, headers=headers, json=json_data, timeout=timeout).json()
+        print(response)
     elif request.method == 'PUT':
-        response = httpx.put(url, headers=headers).json()
+        response = httpx.put(url, headers=headers, json=json_data).json()
     elif request.method == 'DELETE':
         response = httpx.delete(url, headers=headers).json()
+    
     return response
-
 
 @user_router.get("/order")
 def read_order(request: Request, current_user: dict = Depends(get_user_role)):
@@ -51,28 +50,17 @@ def read_order(request: Request, current_user: dict = Depends(get_user_role)):
         return RedirectResponse(url=auth_url)
     else:
         return proxy_request(service_name="order", path="/order/", user_info=current_user, request=request)
-    
-# @user_router.get("/order/add")
-# def add_order(request: Request, current_user: dict = Depends(get_user_role)):
-#     print(f"\n/order/add_order\n")
-#     if current_user['id'] == '':
-#         request.session['prev_url'] = str(request.url)
-#         return RedirectResponse(url=auth_url)
-#     else:
-#         return proxy_request(service_name="order", path="/order/add/", user_info=current_user, request=request)
 
-# @order_router.post('/')
-# def add_order(
-#         order_info: CreateOrderRequest,
-#         order_service: OrderService = Depends(OrderService)
-# ) -> Order:
-#     try:
-#         print('\n///post_order///\n')
-#         order = order_service.create_order(order_info.address_info, order_info.customer_info,
-#                                            order_info.order_info)
-#         return order.dict()
-#     except KeyError:
-#         raise HTTPException(400, f'Order with id={order_info.order_id} already exists')
+
+@user_router.post("/order/add", response_model=CreateOrderRequest)
+def add_order(request: Request, order_request: CreateOrderRequest, current_user: dict = Depends(get_user_role)):
+    print(f"\n/order/add\n")
+    if current_user['id'] == '':
+        request.session['prev_url'] = str(request.url)
+        return RedirectResponse(url=auth_url)
+    else:
+        return proxy_request(service_name="order", path="/order/add", user_info=current_user, request=request, json_data=order_request.dict())
+
 
 
 @user_router.post('/order/{id}/accepted')
@@ -87,67 +75,3 @@ def accepted_order(id: UUID, request: Request, current_user: dict = Depends(get_
 app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(staff_router)
-
-# from fastapi import FastAPI, Depends, Request, APIRouter
-# from starlette.middleware.sessions import SessionMiddleware
-# import httpx
-# from app.endpoints.auth_router import get_user_role
-# from app.endpoints.auth_router import auth_router
-# from starlette.responses import RedirectResponse
-# from uuid import UUID
-
-# host_ip = "localhost"
-# auth_url = "http://localhost:8000/auth/login"
-
-# app = FastAPI(title='Service')
-
-# user_router = APIRouter(prefix='/user', tags=['user'])
-# staff_router = APIRouter(prefix='/staff', tags=['staff'])
-# app.add_middleware(SessionMiddleware, secret_key='asas12334sadfdsf')
-
-# MICROSERVICES = {
-#     "order": "http://localhost:80/api",
-# }
-
-# def proxy_request(service_name: str, path: str, request: Request):
-#     url = f"{MICROSERVICES[service_name]}{path}"
-#     timeout =  20
-#     token = request.session.get('auth_token')
-#     headers = {
-#         'user': str(request.state.user_info),
-#         'Authorization': f'Bearer {token}' if token else ''
-#     }
-#     print(request.method)
-#     if request.method == 'GET':
-#         response = httpx.get(url, headers=headers, timeout=timeout).json()
-#     elif request.method == 'POST':
-#         response = httpx.post(url, headers=headers, timeout=timeout).json()
-#     elif request.method == 'PUT':
-#         response = httpx.put(url, headers=headers).json()
-#     elif request.method == 'DELETE':
-#         response = httpx.delete(url, headers=headers).json()
-#     return response
-
-# @user_router.get("/order")
-# def read_order(request: Request, current_user: dict = Depends(get_user_role)):
-#     print(current_user)
-#     if not current_user['id']:
-#         request.session['prev_url'] = str(request.url)
-#         return RedirectResponse(url=auth_url)
-#     else:
-#         request.state.user_info = current_user
-#         return proxy_request(service_name="order", path="/order/", request=request)
-
-# @user_router.post('/order/{id}/accepted')
-# def accepted_order(id: UUID, request: Request, current_user: dict = Depends(get_user_role)):
-#     print(current_user)
-#     if not current_user['id']:
-#         request.session['prev_url'] = str(request.url)
-#         return RedirectResponse(url=auth_url)
-#     else:
-#         request.state.user_info = current_user
-#         return proxy_request(service_name="order", path=f"/order/{id}/accepted", request=request)
-
-# app.include_router(auth_router)
-# app.include_router(user_router)
-# app.include_router(staff_router)

@@ -31,6 +31,6 @@ class Order(BaseModel):
 
 
 class CreateOrderRequest(BaseModel):
-    address_info: str
-    customer_info: str
-    order_info: str
+    address_info: str 
+    customer_info: str 
+    order_info: str 

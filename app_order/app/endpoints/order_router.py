@@ -1,5 +1,5 @@
 from uuid import UUID
-
+import json
 from app.models.order import Order, CreateOrderRequest
 from app.services.order_service import OrderService
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -14,6 +14,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from fastapi import Request
 
 order_router = APIRouter(prefix='/order', tags=['Order'])
 
@@ -108,19 +109,46 @@ def get_deliveries(order_service: OrderService = Depends(OrderService), user: st
         
 
 
+# @order_router.post('/add')
+# def add_order(
+#         order_info: CreateOrderRequest,
+#         order_service: OrderService = Depends(OrderService),
+#         user: str = Header(...)
+# ) -> Order:
+#     try:
+#         print(f"Received order info: {order_info}")
+#         user = eval(user)
+#         with tracer.start_as_current_span("Get deliveries"):
+#             if user['id'] is not None:
+#                 if user_admin(user['role']):
+#                     get_deliveries_count.inc(1)
+#                     order = order_service.create_order("order_info.address_info", "order_info.customer_info",
+#                                            "order_info.order_info")
+#                     return order.dict()
+#             raise HTTPException(403)
+#     except KeyError:
+#         raise HTTPException(400, f'Order with id={order_info.order_id} already exists')
+#         raise HTTPException(400, f'Order with id= already exists')
+
 @order_router.post('/add')
-def add_order(
-        order_info: CreateOrderRequest,
-        order_service: OrderService = Depends(OrderService)
+async def add_order(
+        request: Request,
+        order_service: OrderService = Depends(OrderService),
+        user: str = Header(...)
 ) -> Order:
     try:
-        print('\n///post_order///\n')
-        order = order_service.create_order(order_info.address_info, order_info.customer_info,
-                                           order_info.order_info)
-        return order.dict()
+        request_body = await request.body()
+        request_data = json.loads(request_body)
+        user = eval(user)
+        with tracer.start_as_current_span("Get deliveries"):
+            if user['id'] is not None:
+                if user_admin(user['role']):
+                    get_deliveries_count.inc(1)
+                    order = order_service.create_order(request_data.get("address_info"), request_data.get("customer_info"), request_data.get("order_info"))
+                    return order.dict()
+            raise HTTPException(403)
     except KeyError:
-        raise HTTPException(400, f'Order with id={order_info.order_id} already exists')
-
+        raise HTTPException(400, f'Order with id= already exists')
 
 @order_router.post('/{id}/accepted')
 def accepted_order(id: UUID, order_service: OrderService = Depends(OrderService)) -> Order:
