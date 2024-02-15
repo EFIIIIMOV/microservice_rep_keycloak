@@ -26,6 +26,9 @@ class DocumentService():
 
     def get_document(self) -> list[Document]:
         return self.document_repo.get_document()
+    
+    def get_document_by_id(self, id: UUID) -> Document:
+        return self.document_repo.get_document_by_id(id)
 
     def create_document(self, ord_id: UUID, type: str, doc: str, customer_info: str) -> Document:
         document = Document(doc_id=uuid4(), ord_id=ord_id, type=type, create_date=datetime.now(),
@@ -34,4 +37,6 @@ class DocumentService():
         return self.document_repo.create_document(document)
 
     def delete_document(self, doc_id: UUID) -> None:
-        return self.document_repo.delete_doc(doc_id)
+        return self.document_repo.delete_document_by_id(doc_id)
+    
+
