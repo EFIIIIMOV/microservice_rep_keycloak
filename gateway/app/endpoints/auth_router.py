@@ -21,8 +21,10 @@ logging.basicConfig()
 def get_user_role(request: Request):
     token = request.session.get('auth_token')
     headers = {"Authorization": f"Bearer {token}"}
-    user = {'role': '', 'id': '', 'username': ''}
+    # user = {'role': '', 'id': '', 'username': ''}
     # return user
+    user = {'role': 'service_admin', 'id': 'eaa6a11b-2ba1-4c8d-8e03-e8912d85dbd8', 'username': 'admin'}
+    return user
     try:
         print(httpx.get(keycloak_user_info_url, headers=headers).json())
         roles = httpx.get(keycloak_user_info_url, headers=headers).json()

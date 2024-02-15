@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'app_order'
+    static_configs:
+      - targets: ['app_order:80']
+    # metrics_path: /metrics/delivery
+  - job_name: 'app_document'
+    static_configs:
+      - targets: ['app_document:81']
+    # metrics_path: /metrics/printings
