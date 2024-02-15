@@ -75,7 +75,7 @@ class DocumentRepo():
                 return deleted_document
             else:
                 # Handle the case where no order is found
-                raise ValueError(f"No order found with ord_id {id}")
+                raise ValueError(f"No document found with ord_id {id}")
         except Exception as e:
             # Rollback any changes if there's an error
             self.db.rollback()

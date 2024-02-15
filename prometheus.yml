@@ -4,9 +4,17 @@ global:
 scrape_configs:
   - job_name: 'app_order'
     static_configs:
-      - targets: ['app_order:80']
+      - targets: [ 'app_order:80' ]
     # metrics_path: /metrics/delivery
   - job_name: 'app_document'
     static_configs:
-      - targets: ['app_document:81']
+      - targets: [ 'app_document:81' ]
     # metrics_path: /metrics/printings
+  - job_name: 'postgres_order'
+    static_configs:
+      - targets: [ 'postgres_order:5432' ]
+      # metrics_path: /metrics/printings
+  - job_name: 'postgres_document'
+    static_configs:
+      - targets: [ 'postgres_document:5433' ]
+      # metrics_path: /metrics/printings
