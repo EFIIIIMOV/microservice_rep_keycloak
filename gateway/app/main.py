@@ -6,6 +6,8 @@ from gateway.app.endpoints.auth_router import auth_router
 from starlette.responses import RedirectResponse
 from uuid import UUID
 from app_order.app.models.order import CreateOrderRequest
+from app_order.app.models.order import CreateOrderRequest
+
 
 host_ip = "localhost"
 auth_url = "http://localhost:8000/auth/login"
